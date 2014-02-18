@@ -1,0 +1,215 @@
+package com.example.convert;
+public class Convert
+{
+	public static String integerToBinary(String stringNumber)
+	{
+		String result = "";
+		int number = Integer.parseInt(stringNumber);
+		while (number > 0)
+		{
+			result = Integer.toString(number % 2) + result;
+			number = number / 2;
+		}
+		if (result.length() == 0)
+			result = "0";
+		return result;
+	}
+	
+	public static int binaryToInteger(String stringNumber)
+	{
+		int result = 0;
+		int temp = 1;
+		for (int i = stringNumber.length()-1 ; i>=0; i-- )
+		{
+			if (stringNumber.charAt(i) == '1')
+				result = result + temp;
+			temp = temp * 2;
+		}
+		return result;
+	}
+	
+	public static String decimalToBinary(double number)
+	{
+		String result = "";
+		double temp = 0.5;
+		while (number > 0)
+		{
+			if (number >= temp)
+			{
+				number = number - temp;
+				result = result + "1";
+			}
+			else
+				result = result + "0";
+			temp = temp/2;
+		}
+		return result;
+	}
+	
+	public static String decimalToFloat32(double number)
+	{
+		String numberString = Double.toString(Math.abs(number));
+		double integerPart = 0;
+		double decimalPart = 0;
+		String result = "";
+		
+		int decimalPointPosition = -1;
+		for (int i = 0; i<numberString.length(); i++)
+			if (numberString.charAt(i) == '.')
+				decimalPointPosition = i;
+		if (decimalPointPosition == -1)
+			integerPart = number;
+		else
+		{
+			integerPart = Math.abs(Double.parseDouble(numberString.substring(0, decimalPointPosition)));
+			decimalPart = Math.abs(number) - Math.abs(integerPart);
+		}
+		
+		String integerBinaryString = Convert.integerToBinary(numberString.substring(0, decimalPointPosition));
+		String decimalBinaryString = Convert.decimalToBinary(decimalPart);
+		// Mantissa
+		result = integerBinaryString.substring(1) + decimalBinaryString;
+		if (result.length() > 23)
+		{
+			if (result.charAt(23) == '1')
+			{
+				int temp = 22;
+				while (result.charAt(temp) != '0')
+				{
+					result = result.substring(0, temp)+ "0" + result.substring(temp+1);
+					temp--;
+				}
+				result = result.substring(0, temp)+ "1" + result.substring(temp+1);
+			}
+			result = result.substring(0,23);
+		}	
+		else
+		{
+			int tmp = 23-result.length();
+			for (int i=1; i <= tmp; i++)
+				result = result + "0";
+		}
+		// Exponent
+		int exponent = integerBinaryString.length() - 1;
+		exponent += 127;
+		String exponentString = Convert.integerToBinary(Integer.toString(exponent)); 
+		int tmp = 8-exponentString.length();
+		for (int i=1; i <= tmp; i++)
+			exponentString = "0" + exponentString;
+		exponentString = exponentString.substring(0,8);
+		result =  exponentString+ result;
+		
+		// Sign
+		if (number >=0)
+			result = "0" + result;
+		else
+			result = "1" + result;
+		
+	    return result;
+	}
+	
+	public static String decimalToFloat64(double number)
+	{
+		String numberString = Double.toString(Math.abs(number));
+		double integerPart = 0;
+		double decimalPart = 0;
+		String result = "";
+		
+		int decimalPointPosition = -1;
+		for (int i = 0; i<numberString.length(); i++)
+			if (numberString.charAt(i) == '.')
+				decimalPointPosition = i;
+		if (decimalPointPosition == -1)
+			integerPart = number;
+		else
+		{
+			integerPart = Math.abs(Double.parseDouble(numberString.substring(0, decimalPointPosition)));
+			decimalPart = Math.abs(number) - Math.abs(integerPart);
+		}
+		
+		String integerBinaryString = Convert.integerToBinary(numberString.substring(0, decimalPointPosition));
+		String decimalBinaryString = Convert.decimalToBinary(decimalPart);
+		
+		
+		
+		// Mantissa
+		result = integerBinaryString.substring(1) + decimalBinaryString;
+		if (result.length() > 52)
+		{
+			if (result.charAt(52) == '1')
+			{
+				int temp = 51;
+				while (result.charAt(temp) != '0')
+				{
+					result = result.substring(0, temp)+ "0" + result.substring(temp+1);
+					temp--;
+				}
+				result = result.substring(0, temp)+ "1" + result.substring(temp+1);
+			}
+			result = result.substring(0,51);
+		}
+		else
+		{
+			int tmp = 52-result.length();
+			for (int i=1; i <= tmp; i++)
+				result = result + "0";
+		}
+		// Exponent
+		int exponent = integerBinaryString.length() - 1;
+		exponent += 1023;
+		String exponentString = Convert.integerToBinary(Integer.toString(exponent)); 
+		int tmp = 11 - exponentString.length();
+		for (int i=1; i <= tmp; i++)
+			exponentString = "0" + exponentString;
+		exponentString = exponentString.substring(0,11);
+		result =  exponentString+ result;
+		
+		// Sign
+		
+		if (number >=0)
+			result = "0" + result;
+		else
+			result = "1" + result;
+		
+	    return result;
+	}
+	
+	public static double float32BinaryToDouble(String numberString)
+	{
+		if (numberString.length() != 32)
+			System.exit(0);
+		double result = 1;
+		double temp = 0.5;
+		for (int i = 9; i < numberString.length(); i++)
+		{
+			if (numberString.charAt(i) == '1')
+				result = result + temp;
+			temp = temp/2;
+		}
+		int exponent = Convert.binaryToInteger(numberString.substring(1,9)) - 127;
+		result = result * Math.pow(2, exponent);
+		if (numberString.charAt(0) == '1')
+			result = -1.0*result;
+		return result;
+	}
+	
+	public static double float64BinaryToDouble(String numberString)
+	{
+		if (numberString.length() != 64)
+			System.exit(0);
+		double result = 1;
+		double temp = 0.5;
+		for (int i = 12; i < numberString.length(); i++)
+		{
+			if (numberString.charAt(i) == '1')
+				result = result + temp;
+			temp = temp/2;
+		}
+		int exponent = Convert.binaryToInteger(numberString.substring(1,12)) - 1023;
+		result = result * Math.pow(2, exponent);
+		if (numberString.charAt(0) == '1')
+			result = -1.0*result;
+		return result;
+	}
+	
+}
